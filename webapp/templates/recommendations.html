@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}For You &middot; CourseCompass{% endblock %}
+{% block content %}
+
+<header class="topbar">
+  <div>
+    <h1>Recommended for {{ profile.name }}</h1>
+    <p class="subtitle">
+      Ranked by content similarity to your interests{% if profile.skill_level %} and your {{ profile.skill_level.lower() }} level{% endif %} &mdash;
+      each card shows the match score and which words drove it.
+      <a href="{{ url_for('profile_page') }}" style="color:var(--accent); font-weight:600;">Edit your profile &rarr;</a>
+    </p>
+  </div>
+</header>
+
+<div class="course-grid" id="rec-grid"></div>
+
+<script id="initial-recs" type="application/json">{{ recommendations | tojson }}</script>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  const grid = document.getElementById("rec-grid");
+  const recs = JSON.parse(document.getElementById("initial-recs").textContent);
+  if (!recs.length) {
+    grid.innerHTML = '<div class="empty-note">No recommendations yet &mdash; try adding a few more interests on your profile.</div>';
+  } else {
+    grid.innerHTML = recs.map(function (c) { return renderCourseCard(c, { showMatch: true, showStatus: true }); }).join("");
+    wireStatusSelects(grid);
+  }
+})();
+</script>
+{% endblock %}

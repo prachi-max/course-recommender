@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}{{ course.title }} &middot; CourseCompass{% endblock %}
+{% block content %}
+
+<a href="{{ url_for('browse') }}" style="display:inline-block; margin-bottom:14px; font-size:12.5px; color:var(--text-dim); text-decoration:none;">&larr; Back to Browse</a>
+
+<section class="panel" style="margin-bottom:20px;">
+  <div class="panel-body" style="padding-top:20px;">
+    <div class="detail-top">
+      <div class="detail-icon" id="detail-icon" data-category="{{ course.category }}"></div>
+      <div class="detail-title-block">
+        <div class="detail-category-level">{{ course.category }} &middot; {{ course.level }}</div>
+        <h1>{{ course.title }}</h1>
+      </div>
+    </div>
+
+    <div class="detail-stat-row">
+      <div class="detail-stat"><span class="detail-stat-value">&#9733; {{ course.rating }}</span><span class="detail-stat-label">Rating</span></div>
+      <div class="detail-stat"><span class="detail-stat-value">{{ course.duration_hours }}h</span><span class="detail-stat-label">Duration</span></div>
+      <div class="detail-stat"><span class="detail-stat-value">{{ "{:,}".format(course.students) }}</span><span class="detail-stat-label">Students</span></div>
+      <div class="detail-stat"><span class="detail-stat-value">{{ course.instructor }}</span><span class="detail-stat-label">Offered by</span></div>
+    </div>
+
+    <p style="font-size:13.5px; color:var(--text-dim); line-height:1.7; margin:0 0 12px;">{{ course.description }}</p>
+    <div class="course-skills">
+      {% for s in course.skills %}<span class="skill-chip">{{ s }}</span>{% endfor %}
+    </div>
+
+    <div class="action-bar">
+      <label for="detail-status-select">Your status for this course:</label>
+      <select class="status-select {{ 'is-set' if course.status else '' }}" id="detail-status-select" data-course-id="{{ course.course_id }}">
+        <option value="">Not added</option>
+        <option value="saved" {% if course.status == "saved" %}selected{% endif %}>Saved for later</option>
+        <option value="known" {% if course.status == "known" %}selected{% endif %}>Already know this</option>
+        <option value="in_progress" {% if course.status == "in_progress" %}selected{% endif %}>In Progress</option>
+        <option value="completed" {% if course.status == "completed" %}selected{% endif %}>Completed</option>
+      </select>
+    </div>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <div class="panel-title">Similar courses</div>
+    <div class="panel-note">Other courses whose topic and skills overlap with this one &mdash; the % shows how close a match.</div>
+  </div>
+  <div class="panel-body">
+    <div class="course-grid" id="similar-grid"></div>
+  </div>
+</section>
+
+<section class="panel" style="margin-top:20px;">
+  <div class="panel-head">
+    <div class="panel-title" id="review-count-title">Learner Reviews on CourseCompass ({{ reviews|length }})</div>
+    <div class="panel-note">Written by visitors to this site &mdash; separate from the real Coursera rating shown above.</div>
+  </div>
+  <div class="panel-body">
+    <div class="review-form">
+      <div class="star-input" id="review-star-input">
+        <span data-value="1">&#9733;</span><span data-value="2">&#9733;</span><span data-value="3">&#9733;</span><span data-value="4">&#9733;</span><span data-value="5">&#9733;</span>
+      </div>
+      <textarea class="review-textarea" id="review-comment-input" placeholder="What did you think of this course? (Leave your own review &mdash; this is a real feature, not sample data.)"></textarea>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button class="btn btn-primary btn-sm" id="review-submit-btn" type="button">Post Review</button>
+        <span class="panel-note" id="review-note"></span>
+      </div>
+    </div>
+    <div id="review-list">
+      {% if not reviews %}
+      <div class="empty-note">No reviews yet &mdash; be the first to leave one.</div>
+      {% endif %}
+      {% for r in reviews %}
+      <div class="review-item">
+        <div class="review-head">
+          <span class="review-avatar">{{ r.reviewer_name[:1]|upper }}</span>
+          <span class="review-name">{{ r.reviewer_name }}</span>
+          <span class="review-stars">{{ "★" * r.rating }}{{ "☆" * (5 - r.rating) }}</span>
+          <span class="review-date">{{ r.created_at[:10] }}</span>
+        </div>
+        <p class="review-comment">{{ r.comment }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<script id="similar-courses" type="application/json">{{ similar | tojson }}</script>
+{% endblock %}
+{% block scripts %}
+<script>
+  window.COURSE_ID = {{ course.course_id }};
+  window.PROFILE_NAME = {{ (profile.name if profile else "") | tojson }};
+</script>
+<script src="{{ url_for('static', filename='course_detail.js') }}"></script>
+{% endblock %}

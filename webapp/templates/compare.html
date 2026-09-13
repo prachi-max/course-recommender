@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Compare Courses &middot; CourseCompass{% endblock %}
+{% block content %}
+
+<header class="topbar">
+  <div>
+    <h1>Compare Courses</h1>
+    <p class="subtitle">Add up to 3 courses and see them side by side &mdash; rating, duration, level, and skills &mdash; to help decide between them.</p>
+  </div>
+</header>
+
+<section class="panel" style="margin-bottom:20px;">
+  <div class="panel-body">
+    <div class="compare-picker">
+      <div class="course-search-box" style="max-width:420px; flex:1;">
+        <input type="text" id="compare-search-input" class="search-input" style="width:100%;" placeholder="Search a course to add&hellip;" autocomplete="off">
+        <div class="course-search-results" id="compare-search-results"></div>
+      </div>
+      <div class="known-chips" id="compare-chips"></div>
+    </div>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-body">
+    <div id="compare-empty" class="empty-note">Add 2 or more courses above to compare them.</div>
+    <div class="compare-table-wrap" id="compare-table-wrap" style="display:none;"></div>
+  </div>
+</section>
+
+<script id="all-courses" type="application/json">{{ courses | tojson }}</script>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='compare.js') }}"></script>
+{% endblock %}

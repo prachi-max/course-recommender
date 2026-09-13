@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Learning Path &middot; CourseCompass{% endblock %}
+{% block content %}
+
+<header class="topbar">
+  <div>
+    <h1>Learning Path</h1>
+    <p class="subtitle">Pick a track and see it laid out in order &mdash; Beginner, then Intermediate, then Advanced &mdash; instead of one flat list.</p>
+  </div>
+</header>
+
+<div class="chip-group" style="margin-bottom:22px;">
+  {% for c in categories %}
+  <a href="{{ url_for('learning_path', category=c) }}" class="chip-toggle {{ 'selected' if c == selected_category else '' }}" style="text-decoration:none; display:inline-block;">{{ c }}</a>
+  {% endfor %}
+</div>
+
+{% if not selected_category %}
+<div class="panel"><div class="panel-body"><div class="empty-note">Pick a track above to see its learning path.</div></div></div>
+{% else %}
+  {% for level, num in [("Beginner", "1"), ("Intermediate", "2"), ("Advanced", "3")] %}
+  <div class="path-level-group">
+    <div class="path-level-marker">{{ num }}</div>
+    <div class="path-level-title">{{ level }} <span class="count">&middot; {{ grouped[level]|length }} course{{ "s" if grouped[level]|length != 1 else "" }}</span></div>
+    <div class="course-grid" id="path-grid-{{ level|lower }}"></div>
+  </div>
+  {% endfor %}
+  <script id="path-data" type="application/json">{{ grouped | tojson }}</script>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+{% if selected_category %}
+<script>
+(function () {
+  const grouped = JSON.parse(document.getElementById("path-data").textContent);
+  ["Beginner", "Intermediate", "Advanced"].forEach(function (level) {
+    const grid = document.getElementById("path-grid-" + level.toLowerCase());
+    const items = grouped[level] || [];
+    grid.innerHTML = items.length
+      ? items.map(function (c) { return renderCourseCard(c, { showStatus: true }); }).join("")
+      : '<div class="empty-note" style="padding:18px;">No ' + level.toLowerCase() + ' courses in this track yet.</div>';
+    wireStatusSelects(grid);
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}

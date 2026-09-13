@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}CourseCompass{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+{% block head %}{% endblock %}
+</head>
+<body>
+
+<div class="shell">
+
+  <aside class="sidebar" id="sidebar">
+    <a class="sidebar-brand" href="{{ url_for('browse') }}">
+      <span class="brand-mark">{{ icon('graduation-cap', 19) }}</span>
+      <span class="brand-text">CourseCompass<small>Learn. Grow. Succeed.</small></span>
+    </a>
+
+    <nav class="sidebar-nav" id="sidebar-nav">
+      <a class="sidebar-link {{ 'active' if active_page == 'browse' else '' }}" href="{{ url_for('browse') }}">
+        <span class="sidebar-icon">{{ icon('home', 17) }}</span>Dashboard
+      </a>
+      <a class="sidebar-link" href="{{ url_for('browse') }}#all-courses">
+        <span class="sidebar-icon">{{ icon('book-open', 17) }}</span>Courses
+      </a>
+      <a class="sidebar-link {{ 'active' if active_page == 'recommendations' else '' }}" href="{{ url_for('recommendations_page') }}">
+        <span class="sidebar-icon">{{ icon('sparkle', 17) }}</span>Recommended
+      </a>
+      <a class="sidebar-link {{ 'active' if active_page == 'learning-path' else '' }}" href="{{ url_for('learning_path') }}">
+        <span class="sidebar-icon">{{ icon('compass', 17) }}</span>Learning Path
+      </a>
+      <a class="sidebar-link {{ 'active' if active_page == 'my-learning' else '' }}" href="{{ url_for('my_learning') }}">
+        <span class="sidebar-icon">{{ icon('folder', 17) }}</span>My Learning
+      </a>
+      <a class="sidebar-link {{ 'active' if active_page == 'compare' else '' }}" href="{{ url_for('compare') }}">
+        <span class="sidebar-icon">{{ icon('scale', 17) }}</span>Compare
+      </a>
+      <a class="sidebar-link {{ 'active' if active_page == 'career-path' else '' }}" href="{{ url_for('career_path') }}">
+        <span class="sidebar-icon">{{ icon('target', 17) }}</span>Career Path
+      </a>
+      <a class="sidebar-link {{ 'active' if active_page == 'insights' else '' }}" href="{{ url_for('insights') }}">
+        <span class="sidebar-icon">{{ icon('trending-up', 17) }}</span>Insights
+      </a>
+      <a class="sidebar-link {{ 'active' if active_page == 'profile' else '' }}" href="{{ url_for('profile_page') if current_profile else url_for('onboarding') }}">
+        <span class="sidebar-icon">{{ icon('sliders', 17) }}</span>Settings
+      </a>
+    </nav>
+
+    <div class="sidebar-foot">
+      {% if current_profile %}
+      <a class="sidebar-account" href="{{ url_for('profile_page') }}">
+        <span class="avatar">{{ current_profile.name[:1].upper() }}</span>
+        <span class="sidebar-account-text">
+          <b>{{ current_profile.name }}</b>
+          <small>View Profile</small>
+        </span>
+      </a>
+      {% else %}
+      <div class="sidebar-promo">
+        <div class="sidebar-promo-title">Get matched courses</div>
+        <p>Set up your profile once and every page tailors its picks to you.</p>
+        <a class="btn btn-primary btn-sm" href="{{ url_for('onboarding') }}">Get Started</a>
+      </div>
+      {% endif %}
+    </div>
+  </aside>
+
+  <div class="main-col">
+    <header class="app-topbar">
+      <button type="button" class="sidebar-burger" id="sidebar-burger" aria-label="Toggle menu" aria-expanded="false" aria-controls="sidebar">{{ icon('menu', 20) }}</button>
+
+      <form class="topbar-search" action="{{ url_for('browse') }}" method="get">
+        <span class="topbar-search-icon" aria-hidden="true">{{ icon('search', 15) }}</span>
+        <input type="text" name="q" placeholder="Search courses, skills or topics&hellip;" autocomplete="off">
+      </form>
+
+      <div class="topbar-right">
+        <span class="topbar-bell" title="Notifications" aria-hidden="true">{{ icon('bell', 16) }}</span>
+        {% if current_profile %}
+        <a class="navbar-avatar" href="{{ url_for('profile_page') }}" title="{{ current_profile.name }} &middot; {{ current_profile.skill_level or 'No level set' }}">
+          <span class="avatar">{{ current_profile.name[:1].upper() }}</span>
+        </a>
+        {% else %}
+        <a class="btn btn-primary btn-sm" href="{{ url_for('onboarding') }}">Get Started</a>
+        {% endif %}
+      </div>
+    </header>
+
+    <main class="content">
+      {% block content %}{% endblock %}
+      <footer class="site-footer">CourseCompass &middot; content-based course recommender &middot; runs entirely on your machine</footer>
+    </main>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+<script src="{{ url_for('static', filename='common.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}My Learning &middot; CourseCompass{% endblock %}
+{% block content %}
+
+<header class="topbar">
+  <div>
+    <h1>My Learning</h1>
+    <p class="subtitle">Everything you've saved, marked as known, or are working through &mdash; {{ profile.name }}.</p>
+  </div>
+</header>
+
+<div class="stat-row">
+  <div class="stat-card stat-accent-amber"><div class="stat-card-icon">{{ icon('activity', 18) }}</div><div><div class="stat-card-label">In Progress</div><div class="stat-card-value">{{ sections.in_progress|length }}</div></div></div>
+  <div class="stat-card stat-accent-purple"><div class="stat-card-icon">{{ icon('check-circle', 18) }}</div><div><div class="stat-card-label">Completed</div><div class="stat-card-value">{{ sections.completed|length }}</div></div></div>
+  <div class="stat-card stat-accent-green"><div class="stat-card-icon">{{ icon('clock', 18) }}</div><div><div class="stat-card-label">Hours Completed</div><div class="stat-card-value">{{ total_hours }}h</div></div></div>
+  <div class="stat-card stat-accent-blue"><div class="stat-card-icon">{{ icon('bookmark', 18) }}</div><div><div class="stat-card-label">Saved for later</div><div class="stat-card-value">{{ sections.saved|length }}</div></div></div>
+</div>
+
+{% set section_defs = [
+  ("in_progress", "In Progress", "#d97706"),
+  ("saved", "Saved for later", "#2563eb"),
+  ("known", "Already known", "#0f9d68"),
+  ("completed", "Completed", "#6d28d9"),
+] %}
+
+{% for key, label, color in section_defs %}
+<div class="ml-section">
+  <div class="ml-section-title"><span class="status-dot-ind" style="background:{{ color }};"></span>{{ label }} ({{ sections[key]|length }})</div>
+  {% if sections[key] %}
+  <div class="course-grid" id="grid-{{ key }}" data-section="{{ key }}"></div>
+  {% else %}
+  <div class="panel"><div class="panel-body"><div class="empty-note" style="padding:20px;">Nothing here yet.</div></div></div>
+  {% endif %}
+</div>
+{% endfor %}
+
+<script id="sections-data" type="application/json">{{ sections | tojson }}</script>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  const sections = JSON.parse(document.getElementById("sections-data").textContent);
+  Object.keys(sections).forEach(function (key) {
+    const grid = document.getElementById("grid-" + key);
+    if (!grid) return;
+    grid.innerHTML = sections[key].map(function (c) { return renderCourseCard(c, { showStatus: true }); }).join("");
+    wireStatusSelects(grid);
+  });
+})();
+</script>
+{% endblock %}

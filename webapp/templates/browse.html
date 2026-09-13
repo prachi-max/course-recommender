@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+{% block title %}Dashboard &middot; CourseCompass{% endblock %}
+{% block content %}
+
+<header class="dash-header">
+  <div>
+    <h1>Dashboard</h1>
+    <p class="subtitle">
+      {% if current_profile %}Welcome back, {{ current_profile.name }} &mdash; here's what's lined up for you, ranked by content similarity to your interests.
+      {% else %}Discover courses tailored to you. Content-based recommendations that match {{ total_courses }} real Coursera courses to your actual interests and skill level.{% endif %}
+    </p>
+  </div>
+  {% if current_profile %}
+  <a class="btn" href="{{ url_for('profile_page') }}">Retake Quiz</a>
+  {% else %}
+  <a class="btn btn-primary" href="{{ url_for('onboarding') }}">Set Up Your Profile</a>
+  {% endif %}
+</header>
+
+<div class="stat-row">
+  <div class="stat-card stat-accent-blue">
+    <div class="stat-card-icon">{{ icon('target', 18) }}</div>
+    <div>
+      <div class="stat-card-label">{{ "Recommended for You" if current_profile else "Popular Right Now" }}</div>
+      <div class="stat-card-value">{{ home_recs|length }}</div>
+    </div>
+    <a class="stat-card-link" href="{{ url_for('recommendations_page') }}">Explore &rarr;</a>
+  </div>
+  <div class="stat-card stat-accent-green">
+    <div class="stat-card-icon">{{ icon('layers', 18) }}</div>
+    <div>
+      <div class="stat-card-label">Skills You Can Gain</div>
+      <div class="stat-card-value">{{ total_skill_count }}</div>
+    </div>
+    <a class="stat-card-link" href="#skills-panel">View Skills &rarr;</a>
+  </div>
+  <div class="stat-card stat-accent-amber">
+    <div class="stat-card-icon">{{ icon('book-open', 18) }}</div>
+    <div>
+      <div class="stat-card-label">Course Catalog</div>
+      <div class="stat-card-value">{{ total_courses }}</div>
+    </div>
+    <a class="stat-card-link" href="#all-courses">Browse All &rarr;</a>
+  </div>
+  <div class="stat-card stat-accent-purple">
+    <div class="stat-card-icon">{{ icon('grid', 18) }}</div>
+    <div>
+      <div class="stat-card-label">Tracks to Explore</div>
+      <div class="stat-card-value">{{ category_counts|length }}</div>
+    </div>
+    <a class="stat-card-link" href="#category-section">View Tracks &rarr;</a>
+  </div>
+</div>
+
+<div class="dash-columns home-section">
+  <div class="panel">
+    <div class="panel-head"><div class="panel-title">Why these courses?</div></div>
+    <div class="panel-body">
+      {% if home_why %}
+      <div class="why-grid">
+        {% if home_why.interests %}
+        <div>
+          <div class="why-col-label">Based on your interests in</div>
+          <div class="why-chip-row">{% for i in home_why.interests %}<span class="why-chip">{{ i }}</span>{% endfor %}</div>
+        </div>
+        {% endif %}
+        {% if home_why.skill_level %}
+        <div>
+          <div class="why-col-label">Your skill level</div>
+          <div class="why-chip-row"><span class="why-chip">{{ home_why.skill_level }}</span></div>
+        </div>
+        {% endif %}
+      </div>
+      {% else %}
+      <p class="why-empty">
+        These are the catalog's highest-rated courses &mdash; real ratings, no personalization yet.
+        <a href="{{ url_for('onboarding') }}">Set up your profile</a> to switch this to picks matched to your interests and skill level.
+      </p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="panel" id="skills-panel">
+    <div class="panel-head">
+      <div class="panel-title">Top Skills {{ "in Your Recommendations" if current_profile else "Across the Catalog" }}</div>
+      <div class="panel-note">How often each skill shows up across {{ "your recommended courses" if current_profile else "the full catalog" }}.</div>
+    </div>
+    <div class="panel-body">
+      {% if top_skills %}
+      <div class="skill-bar-list">
+        {% for s in top_skills %}
+        <div>
+          <div class="skill-bar-row-label"><b>{{ s.skill }}</b><span>{{ s.count }} course{{ "" if s.count == 1 else "s" }}</span></div>
+          <div class="skill-bar-track"><div class="skill-bar-fill" style="width: {{ ((s.count / max_skill_count) * 100) | round(0, 'floor') }}%;"></div></div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="why-empty">No skill data yet.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% if home_recs %}
+<section class="home-section">
+  <div class="section-head">
+    <h2>{{ "Recommended for You" if current_profile else "Popular Right Now" }}</h2>
+    <a class="view-all" href="{{ url_for('recommendations_page') }}">View All &rarr;</a>
+  </div>
+  <p class="section-note">
+    {% if current_profile %}Ranked by content similarity to your interests &mdash; the same match score you'll see on the For You page.{% else %}Highest-rated courses in the catalog. <a href="{{ url_for('onboarding') }}" style="color:var(--accent); font-weight:600;">Set up your profile</a> for picks matched to you.{% endif %}
+  </p>
+  <div class="course-grid" id="home-rec-grid"></div>
+</section>
+<script id="home-recs-data" type="application/json">{{ home_recs | tojson }}</script>
+{% endif %}
+
+{% if home_why %}
+<section class="home-section">
+  <div class="section-head"><h2>Why these courses?</h2></div>
+  <div class="panel">
+    <div class="panel-body">
+      <div class="why-grid">
+        {% if home_why.interests %}
+        <div>
+          <div class="why-col-label">Based on your interests in</div>
+          <div class="why-chip-row">{% for i in home_why.interests %}<span class="why-chip">{{ i }}</span>{% endfor %}</div>
+        </div>
+        {% endif %}
+        {% if home_why.skill_level %}
+        <div>
+          <div class="why-col-label">Your skill level</div>
+          <div class="why-chip-row"><span class="why-chip">{{ home_why.skill_level }}</span></div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<section class="home-section" id="category-section" style="scroll-margin-top: 84px;">
+  <div class="section-head">
+    <h2>Explore by Category</h2>
+    <a class="view-all" href="{{ url_for('learning_path') }}">View All &rarr;</a>
+  </div>
+  <p class="section-note">The full catalog, organized by track &mdash; real course counts, updated live.</p>
+  <div class="category-icon-grid" id="category-grid"></div>
+</section>
+<script id="category-counts-data" type="application/json">{{ category_counts | tojson }}</script>
+
+{% if continue_items %}
+<section class="home-section">
+  <div class="section-head">
+    <h2>Continue Learning</h2>
+    <a class="view-all" href="{{ url_for('my_learning') }}">View All &rarr;</a>
+  </div>
+  <p class="section-note">Picking up where you left off &mdash; status is tracked per course, not a simulated progress bar.</p>
+  <div class="panel"><div class="panel-body"><div class="continue-list" id="continue-list"></div></div></div>
+</section>
+<script id="continue-items-data" type="application/json">{{ continue_items | tojson }}</script>
+{% endif %}
+
+<header class="topbar" id="all-courses" style="scroll-margin-top: 84px;">
+  <div>
+    <h2 style="margin:0 0 4px; font-size:19px; letter-spacing:-0.01em;">All Courses</h2>
+    <p class="subtitle">{{ total_courses }} real courses across 10 tracks, pulled from public Coursera catalog data. Search or filter below, or set up your profile once and let the <a href="{{ url_for('recommendations_page') }}" style="color:var(--accent); font-weight:600;">For You</a> page do the matching.</p>
+  </div>
+</header>
+
+<section class="filter-bar">
+  <input type="text" id="q-input" class="search-input" placeholder="Search courses, skills, topics&hellip;" value="{{ filters.q }}" autocomplete="off">
+  <select id="category-select" class="select-input">
+    <option value="">All categories</option>
+    {% for c in categories %}
+    <option value="{{ c }}" {% if filters.category == c %}selected{% endif %}>{{ c }}</option>
+    {% endfor %}
+  </select>
+  <select id="level-select" class="select-input">
+    <option value="">All levels</option>
+    <option value="Beginner" {% if filters.level == "Beginner" %}selected{% endif %}>Beginner</option>
+    <option value="Intermediate" {% if filters.level == "Intermediate" %}selected{% endif %}>Intermediate</option>
+    <option value="Advanced" {% if filters.level == "Advanced" %}selected{% endif %}>Advanced</option>
+  </select>
+  <button class="btn btn-ghost" id="clear-filters-btn">Clear</button>
+  <span class="filter-count" id="filter-count">{{ courses|length }} courses</span>
+</section>
+
+<div class="course-rows" id="course-rows"></div>
+<div class="course-grid" id="course-grid" hidden></div>
+
+<script id="initial-courses" type="application/json">{{ courses | tojson }}</script>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  const recData = document.getElementById("home-recs-data");
+  if (recData) {
+    const grid = document.getElementById("home-rec-grid");
+    const recs = JSON.parse(recData.textContent);
+    grid.innerHTML = recs.map(function (c) { return renderCourseCard(c, { showMatch: true, showStatus: true }); }).join("");
+    wireStatusSelects(grid);
+  }
+
+  const catData = document.getElementById("category-counts-data");
+  if (catData) {
+    const rows = JSON.parse(catData.textContent);
+    document.getElementById("category-grid").innerHTML = renderCategoryGrid(rows, {{ url_for('browse') | tojson }});
+  }
+
+  const continueData = document.getElementById("continue-items-data");
+  if (continueData) {
+    const items = JSON.parse(continueData.textContent);
+    document.getElementById("continue-list").innerHTML = items.map(renderContinueRow).join("");
+  }
+})();
+</script>
+<script src="{{ url_for('static', filename='browse.js') }}"></script>
+{% endblock %}

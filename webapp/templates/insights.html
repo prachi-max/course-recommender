@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Insights &middot; CourseCompass{% endblock %}
+{% block content %}
+
+<header class="topbar">
+  <div>
+    <h1>Insights</h1>
+    <p class="subtitle">A look at the whole catalog &mdash; and, if you have a profile, how much of it you've already covered.</p>
+  </div>
+</header>
+
+<div class="stat-row">
+  <div class="stat-card stat-accent-blue"><div class="stat-card-icon">{{ icon('book-open', 18) }}</div><div><div class="stat-card-label">Total Courses</div><div class="stat-card-value">{{ total }}</div></div></div>
+  <div class="stat-card stat-accent-purple"><div class="stat-card-icon">{{ icon('grid', 18) }}</div><div><div class="stat-card-label">Tracks</div><div class="stat-card-value">{{ category_stats|length }}</div></div></div>
+  <div class="stat-card stat-accent-green"><div class="stat-card-icon">{{ icon('star', 18) }}</div><div><div class="stat-card-label">Avg Rating</div><div class="stat-card-value">{{ overall_avg_rating }}</div></div></div>
+  <div class="stat-card stat-accent-amber"><div class="stat-card-icon">{{ icon('users', 18) }}</div><div><div class="stat-card-label">Total Enrollments</div><div class="stat-card-value">{{ "{:,}".format(total_students) }}</div></div></div>
+</div>
+
+<div class="insight-grid" style="margin-bottom:20px;">
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-title">Courses by Track</div>
+      <div class="panel-note">How the catalog is spread across the 10 tracks</div>
+    </div>
+    <div class="panel-body">
+      {% for c in category_stats %}
+      <div class="bar-row">
+        <div class="bar-label">{{ c.category }}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:{{ (c.count / max_count * 100) if max_count else 0 }}%;"></div></div>
+        <div class="bar-value">{{ c.count }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-title">Your Skill Coverage</div>
+      <div class="panel-note">Based on courses you've marked known or completed</div>
+    </div>
+    <div class="panel-body">
+      {% if skill_coverage %}
+      <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:6px;">
+        <span style="font-size:26px; font-weight:700;">{{ skill_coverage.pct }}%</span>
+        <span style="font-size:12.5px; color:var(--text-faint);">{{ skill_coverage.known_count }} of {{ skill_coverage.total_count }} skills across the catalog</span>
+      </div>
+      <div class="gap-progress-track" style="margin-bottom:16px;"><div class="gap-progress-fill" style="width:{{ skill_coverage.pct }}%;"></div></div>
+      {% if skill_coverage.known_skills %}
+      <div class="gap-chips">
+        {% for s in skill_coverage.known_skills %}<span class="gap-chip have">{{ s }}</span>{% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-note" style="padding:10px 0;">Mark a few courses as "known" or "completed" to see this fill in.</div>
+      {% endif %}
+      {% else %}
+      <div class="empty-note">Set up your profile to see your own skill coverage here. <a href="{{ url_for('onboarding') }}" style="color:var(--accent); font-weight:600;">Get started &rarr;</a></div>
+      {% endif %}
+    </div>
+  </section>
+</div>
+
+<div class="insight-grid">
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-title">Top Rated</div>
+      <div class="panel-note">Highest real Coursera ratings in the catalog</div>
+    </div>
+    <div class="panel-body">
+      {% for c in top_rated %}
+      <div class="insight-list-item">
+        <span class="insight-rank">{{ loop.index }}</span>
+        <span class="insight-list-title"><a href="{{ url_for('course_detail', course_id=c.course_id) }}">{{ c.title }}</a></span>
+        <span class="insight-list-meta">&#9733; {{ c.rating }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-title">Most Popular</div>
+      <div class="panel-note">Highest real enrollment counts</div>
+    </div>
+    <div class="panel-body">
+      {% for c in most_popular %}
+      <div class="insight-list-item">
+        <span class="insight-rank">{{ loop.index }}</span>
+        <span class="insight-list-title"><a href="{{ url_for('course_detail', course_id=c.course_id) }}">{{ c.title }}</a></span>
+        <span class="insight-list-meta">{{ "{:,}".format(c.students) }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}

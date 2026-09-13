@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Career Path &middot; CourseCompass{% endblock %}
+{% block content %}
+
+<header class="topbar">
+  <div>
+    <h1>Career Path</h1>
+    <p class="subtitle">Pick a target role and see exactly which skills you already have (from your learning history) and which ones are still missing &mdash; with real courses to close the gap.</p>
+  </div>
+</header>
+
+<div class="role-grid">
+  {% for name, track in tracks.items() %}
+  <a class="role-card {{ 'selected' if name == selected_role else '' }}" href="{{ url_for('career_path', role=name) }}">
+    <span class="role-card-icon">{{ icon(track.icon, 20) }}</span>
+    <span class="role-card-name">{{ name }}</span>
+    <span class="role-card-cat">{{ track.category }}</span>
+  </a>
+  {% endfor %}
+</div>
+
+{% if not role_data %}
+<div class="panel"><div class="panel-body"><div class="empty-note">Pick a role above to see your skill gap.</div></div></div>
+{% else %}
+  {% set have_count = have_skills|length %}
+  {% set total_count = have_skills|length + missing_skills|length %}
+  {% set pct = ((have_count / total_count * 100) | round(1)) if total_count else 0 %}
+
+  <section class="panel" style="margin-bottom:20px;">
+    <div class="panel-head">
+      <div class="panel-title" style="display:flex; align-items:center; gap:8px;">{{ icon(role_data.icon, 18) }} {{ selected_role }} &mdash; {{ pct }}% ready</div>
+      <div class="panel-note">Based on courses in your "My Learning" marked known or completed</div>
+    </div>
+    <div class="panel-body">
+      <div class="gap-progress-track"><div class="gap-progress-fill" style="width:{{ pct }}%;"></div></div>
+      <div class="gap-summary">
+        <div class="gap-col">
+          <div class="gap-col-title" style="color:var(--green);">{{ icon('check-circle', 15) }} Skills you have ({{ have_count }})</div>
+          {% if have_skills %}
+          <div class="gap-chips">{% for s in have_skills %}<span class="gap-chip have">{{ s }}</span>{% endfor %}</div>
+          {% else %}
+          <div class="empty-note" style="padding:8px 0; text-align:left;">None yet &mdash; mark a course known or completed on its page.</div>
+          {% endif %}
+        </div>
+        <div class="gap-col">
+          <div class="gap-col-title" style="color:var(--amber);">{{ icon('circle', 15) }} Skills to build ({{ missing_skills|length }})</div>
+          {% if missing_skills %}
+          <div class="gap-chips">{% for s in missing_skills %}<span class="gap-chip missing">{{ s }}</span>{% endfor %}</div>
+          {% else %}
+          <div class="empty-note" style="padding:8px 0; text-align:left;">None &mdash; you've covered every core skill for this role!</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {% if recommended %}
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-title">Recommended to close the gap</div>
+      <div class="panel-note">Real courses whose skills overlap with what's still missing, ranked by how much they cover</div>
+    </div>
+    <div class="panel-body">
+      <div class="course-grid" id="career-rec-grid"></div>
+    </div>
+  </section>
+  <script id="career-recs" type="application/json">{{ recommended | tojson }}</script>
+  {% endif %}
+{% endif %}
+{% endblock %}
+{% block scripts %}
+{% if recommended %}
+<script>
+(function () {
+  const recs = JSON.parse(document.getElementById("career-recs").textContent);
+  const grid = document.getElementById("career-rec-grid");
+  grid.innerHTML = recs.map(function (c) { return renderCourseCard(c, { showStatus: true }); }).join("");
+  wireStatusSelects(grid);
+})();
+</script>
+{% endif %}
+{% endblock %}

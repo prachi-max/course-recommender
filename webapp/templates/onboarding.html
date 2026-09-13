@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}{{ "Edit Profile" if is_edit else "Get Started" }} &middot; CourseCompass{% endblock %}
+{% block content %}
+
+<header class="topbar">
+  <div>
+    <h1>{{ "Edit your profile" if is_edit else "Let's personalize your recommendations" }}</h1>
+    <p class="subtitle">
+      {% if is_edit %}
+      Update your interests, skill level, or the courses you already know &mdash; your "For You" page updates immediately.
+      {% else %}
+      No account needed. Pick a few interests (and, if you like, courses you already know) so the
+      recommender has something to work with. Takes about 20 seconds.
+      {% endif %}
+    </p>
+  </div>
+</header>
+
+<section class="panel">
+  <div class="panel-body" style="padding-top:22px;">
+
+    <div class="form-section">
+      <div class="form-section-title">What should we call you?</div>
+      <input type="text" id="name-input" class="name-input" placeholder="e.g. Priya" value="{{ profile.name if profile else '' }}" maxlength="60">
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">Your current skill level</div>
+      <div class="form-section-note">Used as a gentle tie-breaker, not a hard filter &mdash; you'll still see courses at other levels.</div>
+      <div class="segmented" id="level-segmented">
+        <button type="button" data-value="Beginner">Beginner</button>
+        <button type="button" data-value="Intermediate">Intermediate</button>
+        <button type="button" data-value="Advanced">Advanced</button>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">What are you interested in?</div>
+      <div class="form-section-note">Pick as many tracks as you like.</div>
+      <div class="chip-group" id="category-chips">
+        {% for c in categories %}
+        <button type="button" class="chip-toggle" data-value="{{ c }}">{{ c }}</button>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">Specific skills (optional)</div>
+      <div class="form-section-note">Adds more precision on top of your tracks above.</div>
+      <div class="chip-group" id="skill-chips">
+        {% for s in skills %}
+        <button type="button" class="chip-toggle" data-value="{{ s }}">{{ s }}</button>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">Courses you already know (optional)</div>
+      <div class="form-section-note">Helps us avoid recommending things you've already covered, and find what naturally comes next.</div>
+      <div class="course-search-box">
+        <input type="text" id="course-search-input" class="search-input" style="width:100%;" placeholder="Search course titles&hellip;" autocomplete="off">
+        <div class="course-search-results" id="course-search-results"></div>
+      </div>
+      <div class="known-chips" id="known-chips"></div>
+    </div>
+
+    <div class="onboard-actions">
+      <button class="btn btn-primary" id="save-profile-btn">{{ "Save Changes" if is_edit else "Show My Recommendations" }}</button>
+      {% if is_edit %}
+      <button class="btn btn-danger-ghost" id="reset-profile-btn">Reset profile &amp; start over</button>
+      {% endif %}
+      <span class="panel-note" id="onboard-note"></span>
+    </div>
+
+  </div>
+</section>
+
+{% if is_edit %}
+<section class="panel" style="margin-top:20px;">
+  <div class="panel-head">
+    <div class="panel-title">How recommendations work</div>
+    <div class="panel-note">The short version</div>
+  </div>
+  <div class="panel-body">
+    <div class="step-list">
+      <div class="step-item">
+        <span class="step-num">1</span>
+        <div class="step-text"><b>Every course becomes a vector.</b> Title, skills, category, level, and description are combined and run through a TF-IDF vectorizer, so each course is a set of weighted keywords.</div>
+      </div>
+      <div class="step-item">
+        <span class="step-num">2</span>
+        <div class="step-text"><b>Your profile becomes a vector too.</b> Your chosen interests/skills, plus the courses you've marked as known, are combined the same way.</div>
+      </div>
+      <div class="step-item">
+        <span class="step-num">3</span>
+        <div class="step-text"><b>Cosine similarity ranks every course</b> against your profile vector &mdash; the closer the angle between them, the higher the match percentage.</div>
+      </div>
+      <div class="step-item">
+        <span class="step-num">4</span>
+        <div class="step-text">This is <b>content-based filtering</b>: it only looks at what a course is about, never at what other users clicked. That's also why the "Because of: &hellip;" line can tell you exactly which words drove the match.</div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<script id="all-courses" type="application/json">{{ courses | tojson }}</script>
+<script id="known-ids" type="application/json">{{ known_ids | tojson }}</script>
+<script id="profile-data" type="application/json">{{ (profile.interests if profile else []) | tojson }}</script>
+{% endblock %}
+{% block scripts %}
+<script>
+  window.ONBOARD_SKILL_LEVEL = {{ (profile.skill_level if profile else "") | tojson }};
+  window.ONBOARD_IS_EDIT = {{ "true" if is_edit else "false" }};
+</script>
+<script src="{{ url_for('static', filename='onboarding.js') }}"></script>
+{% endblock %}
